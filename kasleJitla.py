@@ -1,25 +1,27 @@
 import requests
-from bs4 import BeautifulSoup
+import json
+import codecs
 
-provinces = ['Province-1', 'Madhesh', 'Bagmati', 'Gandaki', 'Lumbini', 'Karnali', 'Sudurparschim']
-print('Which province are you from?')
-for i in range(0, len(provinces)):
-    print(f'{i+1}. {provinces[i]}')
-pradesh = int(input('> ').strip())
+states = json.load(codecs.open('states.json', 'r', 'utf-8-sig'))
+districts = json.load(codecs.open('districts.json', 'r', 'utf-8-sig'))
+constituencies = json.load(codecs.open('constituencies.json', 'r', 'utf-8-sig'))
 
-district = input('Well, the problem with using open-source software is finding out how lazy the programmers are. I\'m lazy too and printing out a whole list of 77 districts just for you to type a number seemed like a misuse of processing power. Please state the name of your district.\n> ').strip().lower()
+rootUrl = 'https://result.election.gov.np/JSONFiles/Election2079/HOR/FPTP'
 
-rootUrl = 'https://election.ekantipur.com/'
-page = requests.get(f'{rootUrl}/pradesh-{pradesh}/district-{district}?lng=eng')
-soup = BeautifulSoup(page.content, 'html.parser')
-
-rslt2079 = soup.select('.election-2079')
-rsltConsts = rslt2079[0].select('.col-md-6.col-xl-4')
-numOfConsts = len(rsltConsts)
-
-n = int(input(f'{district} has {numOfConsts} constituencies. Which would you like to select?\n> ').strip())
-
-candies = rsltConsts[n-1].find_all('div', 'candidate-wrapper')
-
-for cand in candies:
-    print(cand.find('div', 'nominee-name').string, '\t', cand.find_all('a')[-1].string.string.strip(), '\t', cand.find('div','vote-count').string.strip())
+if __name__ == '__main__':
+    for id, state in enumerate(states):
+        print(f'{id+1}. {state}')
+    s = int(input('Enter the id of your province.\n>').strip())
+    if s < 1 or s > 7:
+        print('Invalid Input!')
+        exit()
+    distsInState = [dist for dist in districts if dist['parentId']==s]
+    for dist in distsInState:
+        print(f"{dist['id']}. {dist['name']}")
+    d = int(input('\n\nEnter the id of your district.\n>').strip())
+    con = [con for con in constituencies if con['distId'] == d]
+    consNo = con[0]['consts']
+    c = int(input(f'\n\nYour district has {consNo} constituencies. Which would you like to select?\n>').strip())
+    res = requests.get(f'{rootUrl}/HOR-{d}-{c}.json')
+    for cands in json.loads(res.text):
+        print("{0:30} \t {1}".format(cands['CandidateName'], cands['TotalVoteReceived']))
