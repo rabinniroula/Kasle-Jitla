@@ -5,5 +5,9 @@ Uses election commision's API now. Faster and better. The only downside is that 
 ## Usage
 
 ```console
+# without arguments
 foo@bar:~$ python kasleJitla.py
+
+# with arguments
+foo@bar:~$ python kasleJitla.py -s 1 -d 4 -c 5
 ```
